@@ -6,6 +6,7 @@
 
   var STORAGE_KEY = "wellness_cookie_consent_v1";
   var COOKIE_KEY = "wellness_cookie_consent_v1";
+  var SIMPLE_FLAG_KEY = "wcc_given";
   var COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
   var GA_MEASUREMENT_ID = "G-F4EZJEZF7R";
   var COOKIE_POLICY_PATH = "cookie-richtlinie.html";
@@ -71,19 +72,92 @@
     });
   }
 
+  function readSimpleFlag() {
+    // Check sessionStorage (fastest, works within one browser session)
+    try {
+      if (sessionStorage.getItem(SIMPLE_FLAG_KEY) === "1") return true;
+    } catch (e) {}
+    // Check simple cookie flag
+    var parts = document.cookie ? document.cookie.split(";") : [];
+    for (var i = 0; i < parts.length; i += 1) {
+      var p = parts[i].trim();
+      if (p === SIMPLE_FLAG_KEY + "=1") return true;
+    }
+    // Check localStorage flag
+    try {
+      if (localStorage.getItem(SIMPLE_FLAG_KEY) === "1") return true;
+    } catch (e) {}
+    return false;
+  }
+
+  function writeSimpleFlag(analyticsGranted) {
+    try {
+      sessionStorage.setItem(SIMPLE_FLAG_KEY, "1");
+    } catch (e) {}
+    try {
+      localStorage.setItem(SIMPLE_FLAG_KEY, "1");
+    } catch (e) {}
+    document.cookie =
+      SIMPLE_FLAG_KEY +
+      "=1; path=/; max-age=" +
+      COOKIE_MAX_AGE_SECONDS +
+      "; samesite=lax";
+    // Also store analytics preference as a simple cookie
+    var analyticsVal = analyticsGranted ? "1" : "0";
+    document.cookie =
+      SIMPLE_FLAG_KEY +
+      "_a=" +
+      analyticsVal +
+      "; path=/; max-age=" +
+      COOKIE_MAX_AGE_SECONDS +
+      "; samesite=lax";
+    try {
+      localStorage.setItem(SIMPLE_FLAG_KEY + "_a", analyticsVal);
+    } catch (e) {}
+  }
+
+  function readAnalyticsFromSimpleFlag() {
+    // Check localStorage
+    try {
+      var val = localStorage.getItem(SIMPLE_FLAG_KEY + "_a");
+      if (val === "1") return true;
+      if (val === "0") return false;
+    } catch (e) {}
+    // Check cookie
+    var parts = document.cookie ? document.cookie.split(";") : [];
+    for (var i = 0; i < parts.length; i += 1) {
+      var p = parts[i].trim();
+      if (p === SIMPLE_FLAG_KEY + "_a=1") return true;
+      if (p === SIMPLE_FLAG_KEY + "_a=0") return false;
+    }
+    return true; // default: analytics granted
+  }
+
   function getStoredConsent() {
+    // Try the full JSON cookie first
     var cookieConsent = readConsentCookie();
     if (cookieConsent) return cookieConsent;
 
+    // Try localStorage JSON
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      var parsed = JSON.parse(raw);
-      if (!parsed || !parsed.categories) return null;
-      return parsed;
-    } catch (error) {
-      return null;
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && parsed.categories) return parsed;
+      }
+    } catch (error) {}
+
+    // Fallback: simple flag (works even when JSON storage fails)
+    if (readSimpleFlag()) {
+      return {
+        categories: {
+          necessary: true,
+          analytics: readAnalyticsFromSimpleFlag(),
+        },
+      };
     }
+
+    return null;
   }
 
   function persistConsent(categories) {
@@ -100,6 +174,7 @@
     } catch (error) {}
 
     writeConsentCookie(payload);
+    writeSimpleFlag(!!categories.analytics);
     return payload;
   }
 

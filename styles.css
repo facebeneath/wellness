@@ -548,6 +548,40 @@ nav a.nav-back:hover {
   text-align: center;
 }
 
+.equipment-hero {
+  width: min(1200px, 92%);
+  margin: 0 auto 40px;
+}
+
+.equipment-hero-text {
+  color: var(--text-soft);
+  text-align: center;
+  font-size: clamp(1.1rem, 2.1vw, 1.45rem);
+  font-weight: 500;
+  margin: 0 auto 16px;
+  max-width: 760px;
+}
+
+.equipment-hero-img {
+  width: 100%;
+  max-width: 900px;
+  height: clamp(260px, 55vw, 620px);
+  object-fit: cover;
+  object-position: center 32%;
+  border-radius: 22px;
+  display: block;
+  margin: 0 auto;
+  box-shadow: 0 12px 40px rgba(31, 59, 52, 0.18);
+}
+
+.service-area p {
+  color: var(--text-soft);
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 500;
+}
+
 .benefits h2,
 .process h2,
 .faq h2,
@@ -651,11 +685,6 @@ nav a.nav-back:hover {
 
 .equipment-note p {
   color: rgba(255, 255, 255, 0.85);
-}
-
-.service-area p {
-  color: var(--text-soft);
-  margin-bottom: 16px;
 }
 
 .area-list {

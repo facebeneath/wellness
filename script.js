@@ -297,21 +297,30 @@ function stopAutoSlide() {
 function handleMode() {
   index = 0;
   slideTo(0);
-
-  if (isMobile()) {
-    startAutoSlide();
-  } else {
-    stopAutoSlide();
-  }
+  startAutoSlide();
 }
 
-window.addEventListener("resize", handleMode);
+window.addEventListener("resize", () => {
+  slideTo(index);
+});
 
 const nextBtn = document.getElementById("nextTestimonial");
 const prevBtn = document.getElementById("prevTestimonial");
 
-if (nextBtn) nextBtn.addEventListener("click", next);
-if (prevBtn) prevBtn.addEventListener("click", prev);
+if (nextBtn) {
+  nextBtn.addEventListener("click", () => {
+    stopAutoSlide();
+    next();
+    startAutoSlide();
+  });
+}
+if (prevBtn) {
+  prevBtn.addEventListener("click", () => {
+    stopAutoSlide();
+    prev();
+    startAutoSlide();
+  });
+}
 
 handleMode();
 
